@@ -153,7 +153,6 @@ const anotherLateReturnDate = new Date();
 anotherLateReturnDate.setDate(anotherLateReturnDate.getDate() + 1); // 5 days late
 anotherBook.returnBorrowedItem(member, anotherLateReturnDate);
 console.log(`Total fine for ${member.username}: ${member.getFine()}`);
-
 const librarian = new Librarian("Enoch Grahams", "Group4");
 librarian.addItemToLibrary(book);
 librarian.addItemToLibrary(ebook);
