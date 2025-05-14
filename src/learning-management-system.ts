@@ -1,3 +1,5 @@
+const inMemoryDb: unknown = [];
+
 enum typeOfWork{
     QUIZ = "quiz",
     PROJECT = "project",
@@ -13,24 +15,25 @@ interface Assessment{
 
 
 interface Database{
-    data:unknown[],
     save(_data: unknown): void,
     delete(id: number): void,
     viewAll(): unknown 
 }
 
+
+
 class database implements Database{
-    data: unknown[];
+    data: unknown;
 
     constructor(){
-        this.data= [];
+        this.data= inMemoryDb;
     }
 
     save(_data: unknown): void{
         this.data.push(_data);
     }
     delete(id: number): void{
-        this.data = this.data.filter(value=>value!=id);
+        this.data = this.data.filter((student)=>student.regNum!=id);
     }
     viewAll(): unknown{
         return this.data;
@@ -52,12 +55,12 @@ class Person{
 }
 
 class Course{
-    protected lectures: number[];
-    protected assignments: number[];
-    private enrolledStudents: string[];
+    protected lectures: string[];
+    protected assignments: string[];
+    private enrolledStudents: number;
     protected classSchedule: string[];
 
-    constructor(_lectures: number[], _assignmetns:number[], _enrolledStudents: string[], _classSchedule: string[]){
+    constructor(_lectures: string[], _assignmetns:string[], _enrolledStudents: number, _classSchedule: string[]){
         this.lectures = _lectures;
         this.assignments = _assignmetns;
         this.enrolledStudents = _enrolledStudents;
@@ -73,17 +76,9 @@ class Course{
 }
 
 class enrollment{
-    student: Student | null;
-    admin: Admin | null;
-    constructor(){
-        this.student = null;
-        this.admin = null;
-    }
 
-    enroll(_student: Student){
-      this.admin?.admitStudent(_student);
-      this.admin?.notifyAll("New student admitted!");
-    }
+ 
+    constructor(){}
 
     gradeStudent(courseWork: Quiz & Assignment & Project): string{
         let grade = courseWork.gradeAsmt();
@@ -114,55 +109,83 @@ class Student extends Person{
     modules: string[];
     grade: string | null;
     yearOfStudy: number;
-    enrollment !: enrollment;
+    db: database;
 
-    constructor(_name: string, _role:string, _age: number, _gender: string, _regNum: number, _modules: string[], _grade: string, _yearOfStudy: number){
+    constructor(_name: string, _role:string, _age: number, _gender: string, _regNum: number,_course:Course, _modules: string[], _grade: string | null, _yearOfStudy: number){
         super(_name, _role, _age, _gender);
         this.regNum = _regNum;
         this.modules = _modules;
         this.grade = null;
         this.yearOfStudy = _yearOfStudy;
-
+        this.course = _course;
+        this.db = new database();
     }
 
-    apply(){
-        this.enrollment.enroll(this);
-    }
-
-    doAssessment(test: Quiz | Assignment | Project){
+  private getAllCourses(): unknown{
+        let all = this.db.viewAll();
+        let students = all.filter((value) => value.role === "student");
+        let thisStudent = students.filter(value => value.regNum == this.regNum);
+        let courses = thisStudent.map(student=> student.course);
         
-        test.gradeAsmt()
-    }
+        return courses;
+  }
+
+  public accessCourses(): unknown{
+    return this.getAllCourses();
+  }
 }
 
 class Professor extends Person{
     private IdNo: number;
     lecture: string[] | string;
+    db: database;
 
     constructor(_name: string, _role:string, _age: number, _gender: string,_idNo: number, _lecture: string[] | string){
         super(_name, _role, _age, _gender);
         this.IdNo = _idNo;
         this.lecture = _lecture;
+        this.db = new database();
     }
+
+    private getAllLectures(): unknown{
+        let all = this.db.viewAll();
+        let profs = all.filter((value) => value.role === "professor");
+        let thisProf = profs.filter(value => value.IdNo == this.IdNo);
+        let lectures = thisProf.map(prof => prof.lecture);
+        
+        return lectures;
+  }
+
+  public accessLectures(): unknown{
+    return this.getAllLectures();
+  }
 }
 
 class Admin extends Person{
     idNo: number;
     private db: database;
+    private enroll: enrollment;
 
     constructor(_name: string, _role:string, _age: number, _gender: string, _idNo: number){
         super(_name, _role, _age, _gender);
         this.idNo = _idNo;
         this.db = new database();
+        this.enroll = new enrollment();
     }
 
     admitStudent(student: Student){
         this.db.save(student);
+        this.notifyAll("New student admitted!");
     }
 
-    expellStudent(student: Student): string{
+    assignProf(professor: Professor){
+        this.db.save(professor);
+        this.notifyAll("Professor assigned lecture");
+    }
+
+    expellStudent(student: Student){
         this.db.delete(student.regNum);
-        return "Student expelled";
+        this.notifyAll("Student expelled");
     }
 
     notifyAll(message: string){
@@ -170,11 +193,16 @@ class Admin extends Person{
     }
 
     getAllStudents(): unknown{
-        return this.db.viewAll();
+        let all = this.db.viewAll();
+        let students = all.filter((value)=> value.role == "student");
+        return students;
     }
 
     getAllProfs(): unknown{
-        return this.db.viewAll();
+        let all = this.db.viewAll();
+        let professors = all.filter((value)=> value.role == "professor");
+
+        return professors;
     }
 
 }
@@ -233,6 +261,24 @@ class Project implements Assessment{
 
 
 function Main(){
+    let admin = new Admin("Kay", "admin", 21, "Male", 211);
+    let course = new Course(["Math for science", "IoT"], ["Math for science ass", "IoT ass"], 0, ["Monday 10-12pm", "Tue 10-12pm"]);
+    let student1 = new Student("Mike", "student", 20, "Male", 2333,course,["maths", "oop"], null, 1);
+    let student2 = new Student("Jack", "student", 20, "Male", 2334,course,["maths", "oop"], null, 1);
+    let professor1 = new Professor("Kevin", "professor",57,"Male", 123, ["Maths"]);
 
 
+
+    admin.admitStudent(student1);
+    admin.admitStudent(student2);
+    admin.assignProf(professor1);
+
+  
+    console.log(admin.getAllStudents());
+    console.log(admin.getAllProfs());
+
+    console.log(student2.accessCourses());
+    console.log(professor1.accessLectures());
 }
+
+Main();
