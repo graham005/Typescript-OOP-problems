@@ -4,9 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev1": "tsx watch src/index.ts",
-    "e_commerce": "tsx watch src/e-commerce.ts"
-    "build": "tsc "
+
+    "dev1": "tsx watch src/learning-management-system.ts",
+    "dev2": "tsx watch src/library-management-system.ts",
+     "e_commerce": "tsx watch src/e-commerce.ts"
+    "build": "tsc"
+
   },
   "keywords": [],
   "author": "",

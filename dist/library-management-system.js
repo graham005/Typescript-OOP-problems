@@ -1,9 +1,5 @@
-"use strict";
 // Abstract base class for all library resources
 class LibraryResources {
-    resourceId;
-    name;
-    publicationYear;
     constructor(resourceId, name, publicationYear) {
         this.resourceId = resourceId;
         this.name = name;
@@ -12,13 +8,11 @@ class LibraryResources {
 }
 // Base class for user accounts
 class Account {
-    username;
-    password;
-    borrowedItems = [];
-    fine = 0;
     constructor(username, password) {
         this.username = username;
         this.password = password;
+        this.borrowedItems = [];
+        this.fine = 0;
     }
     applyFine(amount) {
         this.fine += amount;
@@ -38,8 +32,10 @@ class Member extends Account {
 }
 // Book class 
 class Book extends LibraryResources {
-    isBorrowed = false;
-    dueDate;
+    constructor() {
+        super(...arguments);
+        this.isBorrowed = false;
+    }
     category() {
         return "Book";
     }
@@ -74,8 +70,10 @@ class DVD extends Book {
 }
 // EBook class (non-physical but still borrowable)
 class EBook extends LibraryResources {
-    isBorrowed = false;
-    dueDate;
+    constructor() {
+        super(...arguments);
+        this.isBorrowed = false;
+    }
     category() {
         return "EBook";
     }
