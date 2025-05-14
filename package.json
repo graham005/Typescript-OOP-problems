@@ -6,6 +6,7 @@
   "scripts": {
     "dev1": "tsx watch src/index.ts",
     "e_commerce": "tsx watch src/e-commerce.ts"
+    "build": "tsc "
   },
   "keywords": [],
   "author": "",
