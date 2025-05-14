@@ -77,11 +77,16 @@ class Course{
 
 class enrollment{
 
- 
-    constructor(){}
+    totalScore: number;
+    constructor(){ this.totalScore = 0}
 
-    gradeStudent(courseWork: Quiz & Assignment & Project): string{
-        let grade = courseWork.gradeAsmt();
+    calculateTotalScore(courseWork: Quiz | Assignment | Project){
+        this.totalScore += courseWork.gradeAsmt();
+    }
+
+    gradeStudent(): string{
+
+        let grade = (this.totalScore / 3);
         if(grade>=80)
             return "A";
         else if(grade >=75 && grade < 80)
@@ -110,6 +115,8 @@ class Student extends Person{
     grade: string | null;
     yearOfStudy: number;
     db: database;
+    test !: Quiz | Assignment | Project;
+    enroll: enrollment;
 
     constructor(_name: string, _role:string, _age: number, _gender: string, _regNum: number,_course:Course, _modules: string[], _grade: string | null, _yearOfStudy: number){
         super(_name, _role, _age, _gender);
@@ -119,6 +126,7 @@ class Student extends Person{
         this.yearOfStudy = _yearOfStudy;
         this.course = _course;
         this.db = new database();
+        this.enroll = new enrollment();
     }
 
   private getAllCourses(): unknown{
@@ -132,6 +140,26 @@ class Student extends Person{
 
   public accessCourses(): unknown{
     return this.getAllCourses();
+  }
+
+  doQuiz(score: number, outOf: number){
+        this.test = new Quiz(typeOfWork.QUIZ, outOf, score);
+        this.enroll.calculateTotalScore(this.test);
+  }
+
+   doProj(score: number, outOf: number){
+        this.test = new Quiz(typeOfWork.PROJECT, outOf, score);
+        this.enroll.calculateTotalScore(this.test);
+  }
+
+   doAssignment(score: number, outOf: number){
+    this.test = new Quiz(typeOfWork.ASSIGNMENT, outOf, score);
+    this.enroll.calculateTotalScore(this.test);
+    
+  }
+  getGrade(): string{
+    this.grade = this.enroll.gradeStudent();
+    return this.grade;
   }
 }
 
@@ -173,9 +201,9 @@ class Admin extends Person{
         this.enroll = new enrollment();
     }
 
-    admitStudent(student: Student){
+    admitOrUpdateStudent(student: Student){
         this.db.save(student);
-        this.notifyAll("New student admitted!");
+        this.notifyAll("student updated!");
     }
 
     assignProf(professor: Professor){
@@ -268,17 +296,34 @@ function Main(){
     let professor1 = new Professor("Kevin", "professor",57,"Male", 123, ["Maths"]);
 
 
+    console.log();
 
-    admin.admitStudent(student1);
-    admin.admitStudent(student2);
+   
     admin.assignProf(professor1);
 
-  
+
+    student1.doAssignment(70, 100);
+    student1.doQuiz(70, 100);
+    student1.doProj(70, 100);
+
+
+    console.log("Student grade is : " + student1.getGrade());
+
+    admin.admitOrUpdateStudent(student1);
+    admin.admitOrUpdateStudent(student2);
+
+
+    console.log(" All students in the database: ");
     console.log(admin.getAllStudents());
+
+    console.log("All professors in the database: ");
     console.log(admin.getAllProfs());
 
+    console.log("Student courses are : ");
     console.log(student2.accessCourses());
-    console.log(professor1.accessLectures());
+
+    console.log("Lecturer's courses are: ");
+    console.log( professor1.accessLectures());
 }
 
 Main();
