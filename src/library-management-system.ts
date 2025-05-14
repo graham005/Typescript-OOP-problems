@@ -1,0 +1,159 @@
+// Interface for borrowable items
+interface Lendable {
+  borrowItem(user: Account): void;
+  returnBorrowedItem(user: Account, returnedOn: Date): void;
+}
+
+// Abstract base class for all library resources
+abstract class LibraryResources {
+  constructor(
+    public resourceId: string,
+    public name: string,
+    public publicationYear: number
+  ) {}
+
+  abstract category(): string;
+}
+
+type BorrowedRecord = {
+  item: Lendable;
+  dueDate: Date;
+};
+
+// Base class for user accounts
+class Account {
+  public borrowedItems: BorrowedRecord[] = [];
+  private fine: number = 0;
+
+  constructor(public username: string, public password: string) {}
+
+  applyFine(amount: number) {
+    this.fine += amount;
+  }
+
+  getFine(): number {
+    return this.fine;
+  }
+
+  payFine(amount: number) {
+    this.fine = Math.max(0, this.fine - amount);
+  }
+}
+
+// Member user
+class Member extends Account {
+  constructor(username: string, password: string) {
+    super(username, password);
+  }
+}
+
+// Book class 
+class Book extends LibraryResources implements Lendable {
+  private isBorrowed = false;
+  private dueDate?: Date;
+
+  category(): string {
+    return "Book";
+  }
+
+  borrowItem(user: Account): void {
+    if (!this.isBorrowed) {
+      this.isBorrowed = true;
+      this.dueDate = new Date();
+      this.dueDate.setDate(this.dueDate.getDate() + 7); // 1 week loan
+      user.borrowedItems.push({ item: this, dueDate: this.dueDate });
+      console.log(`"${this.name}" borrowed by ${user.username}`);
+    }
+  }
+
+  returnBorrowedItem(user: Account, returnedOn: Date): void {
+    this.isBorrowed = false;
+    const record = user.borrowedItems.find(b => b.item === this);
+    if (record) {
+      const due = record.dueDate.getTime();
+      const returned = returnedOn.getTime();
+      if (returned > due) {
+        const daysLate = Math.ceil((returned - due) / (1000 * 3600 * 24));
+        user.applyFine(daysLate * 20); // sh.20 per late day
+      }
+    }
+    console.log(`"${this.name}" returned by ${user.username}`);
+  }
+}
+
+// DVD class extending Book
+class DVD extends Book {
+  category(): string {
+    return "DVD";
+  }
+}
+
+// EBook class (non-physical but still borrowable)
+class EBook extends LibraryResources implements Lendable {
+  private isBorrowed = false;
+  private dueDate?: Date;
+
+  category(): string {
+    return "EBook";
+  }
+
+  borrowItem(user: Account): void {
+    if (!this.isBorrowed) {
+      this.isBorrowed = true;
+      this.dueDate = new Date();
+      this.dueDate.setDate(this.dueDate.getDate() + 7); // 1-week loan for ebooks
+      user.borrowedItems.push({ item: this, dueDate: this.dueDate });
+      console.log(`"${this.name}" digitally borrowed by ${user.username}`);
+    }
+  }
+
+  returnBorrowedItem(user: Account, returnedOn: Date): void {
+    this.isBorrowed = false;
+    const record = user.borrowedItems.find(b => b.item === this);
+    if (record) {
+      const due = record.dueDate.getTime();
+      const returned = returnedOn.getTime();
+      if (returned > due) {
+        const daysLate = Math.ceil((returned - due) / (1000 * 3600 * 24));
+        user.applyFine(daysLate * 10); // 1 per late day
+      }
+    }
+    console.log(`"${this.name}" returned (eBook) by ${user.username}`);
+  }
+}
+
+// Librarian user
+class Librarian extends Account {
+  constructor(username: string, password: string) {
+    super(username, password);
+  }
+
+  addItemToLibrary(item: LibraryResources) {
+    console.log(`"${item.name}" added to library by ${this.username}.`);
+  }
+}
+
+const member = new Member("Murchoid", "1234");
+const book = new Book("B1", "Learning JavaScript: A Beginner's Guide", 2022);
+const ebook = new EBook("E1", "Digital Learning", 2023);
+const dvd = new DVD("D1", "Roman Civilization History", 2021);
+
+// Member borrows and returns a book late
+book.borrowItem(member);
+
+const lateReturnDate = new Date();
+lateReturnDate.setDate(lateReturnDate.getDate() + 13); // 6 days late
+book.returnBorrowedItem(member, lateReturnDate);
+
+// Member borrows another book
+const anotherBook = new Book("E1", "Digital Learning", 2023);
+anotherBook.borrowItem(member);
+
+const anotherLateReturnDate = new Date();
+anotherLateReturnDate.setDate(anotherLateReturnDate.getDate() + 1); // 5 days late
+anotherBook.returnBorrowedItem(member, anotherLateReturnDate);
+console.log(`Total fine for ${member.username}: ${member.getFine()}`);
+const librarian = new Librarian("Enoch Grahams", "Group4");
+librarian.addItemToLibrary(book);
+librarian.addItemToLibrary(ebook);
+librarian.addItemToLibrary(dvd);

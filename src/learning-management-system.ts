@@ -23,10 +23,10 @@ interface Database{
 
 
 class database implements Database{
-    data: unknown;
+    data: any[];
 
     constructor(){
-        this.data= inMemoryDb;
+        this.data = inMemoryDb as any[];
     }
 
     save(_data: unknown): void{
@@ -35,7 +35,7 @@ class database implements Database{
     delete(id: number): void{
         this.data = this.data.filter((student)=>student.regNum!=id);
     }
-    viewAll(): unknown{
+    viewAll(){
         return this.data;
     }
 }
@@ -67,11 +67,11 @@ class Course{
         this.classSchedule = _classSchedule;
     }
 
-    getEnrolledStudents(role: Admin): string[] | string{
+    getEnrolledStudents(role: Admin): number{
         if(role.idNo === 1234){
             return this.enrolledStudents;
         }
-        return "Unauthorized buddy!!";
+        return 0;
     }
 }
 

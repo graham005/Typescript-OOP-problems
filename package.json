@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev1": "tsx watch src/learning-management-system.ts"
+    "dev1": "tsx watch src/learning-management-system.ts",
+    "dev2": "tsx watch src/library-management-system.ts",
+    "build": "tsc"
+
   },
   "keywords": [],
   "author": "",
