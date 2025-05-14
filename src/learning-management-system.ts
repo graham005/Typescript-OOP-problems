@@ -13,18 +13,27 @@ interface Assessment{
 
 
 interface Database{
-    data: []
+    data:unknown[],
+    save(_data: unknown): void,
+    delete(id: number): void,
+    viewAll(): unknown 
 }
 
 class database implements Database{
-    private data;
+    data: unknown[];
 
     constructor(){
         this.data= [];
     }
 
-    save(_data: Person | Course){
+    save(_data: unknown): void{
         this.data.push(_data);
+    }
+    delete(id: number): void{
+        this.data = this.data.filter(value=>value!=id);
+    }
+    viewAll(): unknown{
+        return this.data;
     }
 }
 
@@ -56,7 +65,7 @@ class Course{
     }
 
     getEnrolledStudents(role: Admin): string[] | string{
-        if(role.id === "1234"){
+        if(role.idNo === 1234){
             return this.enrolledStudents;
         }
         return "Unauthorized buddy!!";
@@ -64,16 +73,38 @@ class Course{
 }
 
 class enrollment{
-    student: Student;
-    course: Course;
-
-    constructor(_student: Student, _course: Course){
-        this.student = _student;
-        this.course = _course;
+    student: Student | null;
+    admin: Admin | null;
+    constructor(){
+        this.student = null;
+        this.admin = null;
     }
 
-    grade(courseWork: Quiz & Assignment & Project): number{
-        
+    enroll(_student: Student){
+      this.admin?.admitStudent(_student);
+      this.admin?.notifyAll("New student admitted!");
+    }
+
+    gradeStudent(courseWork: Quiz & Assignment & Project): string{
+        let grade = courseWork.gradeAsmt();
+        if(grade>=80)
+            return "A";
+        else if(grade >=75 && grade < 80)
+            return "A-";
+        else if(grade>=70 && grade < 75)
+            return "B+";
+        else if(grade >=65 && grade < 70)
+            return "B";
+        else if(grade>=60 && grade < 65)
+            return "B-";
+        else if(grade >=55 && grade < 60)
+            return "C+";
+        else if(grade>=50 && grade < 55)
+            return "C";
+        else if(grade >=45 && grade < 50)
+            return "C-";
+        else
+            return "Sup you cant be serious!!";
     }
 }
 
@@ -81,25 +112,32 @@ class Student extends Person{
     regNum: number;
     course !: Course;
     modules: string[];
-    grade: string;
+    grade: string | null;
     yearOfStudy: number;
+    enrollment !: enrollment;
 
     constructor(_name: string, _role:string, _age: number, _gender: string, _regNum: number, _modules: string[], _grade: string, _yearOfStudy: number){
         super(_name, _role, _age, _gender);
         this.regNum = _regNum;
         this.modules = _modules;
-        this.grade = _grade;
+        this.grade = null;
         this.yearOfStudy = _yearOfStudy;
+
     }
 
-    enrollToCourse(_course: Course){
-        this.course = _course;
+    apply(){
+        this.enrollment.enroll(this);
+    }
+
+    doAssessment(test: Quiz | Assignment | Project){
+        
+        test.gradeAsmt()
     }
 }
 
 class Professor extends Person{
-    private IdNo: number,
-    lecture: string[] | string,
+    private IdNo: number;
+    lecture: string[] | string;
 
     constructor(_name: string, _role:string, _age: number, _gender: string,_idNo: number, _lecture: string[] | string){
         super(_name, _role, _age, _gender);
@@ -108,28 +146,35 @@ class Professor extends Person{
     }
 }
 
-class Admin{
-    private id: number,
-    
+class Admin extends Person{
+    idNo: number;
+    private db: database;
 
-    admitStudent(){
-
+    constructor(_name: string, _role:string, _age: number, _gender: string, _idNo: number){
+        super(_name, _role, _age, _gender);
+        this.idNo = _idNo;
+        this.db = new database();
     }
 
-    expellStudent(){
-
+    admitStudent(student: Student){
+        this.db.save(student);
     }
 
-    notifyAll(){
-
+    expellStudent(student: Student): string{
+        this.db.delete(student.regNum);
+        return "Student expelled";
     }
 
-    getAllStudents(): string[]{
-
+    notifyAll(message: string){
+        console.log(message);
     }
 
-    getAllProfs(): string[]{
+    getAllStudents(): unknown{
+        return this.db.viewAll();
+    }
 
+    getAllProfs(): unknown{
+        return this.db.viewAll();
     }
 
 }
@@ -148,6 +193,7 @@ class Quiz implements Assessment{
     gradeAsmt(): number {
         let grade:number = this.yourScore/this.maxScore * 100;
         return grade;
+        
     }
 }
 
@@ -183,4 +229,10 @@ class Project implements Assessment{
         let grade:number = this.yourScore/this.maxScore * 100;
         return grade;
     }
+}
+
+
+function Main(){
+
+
 }
